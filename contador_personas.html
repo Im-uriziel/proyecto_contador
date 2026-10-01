@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Contador de Personas</title>
+  <style>
+    :root {
+      --rosa: #e91e8c;
+      --bar: #fbc02d;
+      --ok: #2e9e5b;
+      --warn: #f0a800;
+      --full: #d32f2f;
+      --estado: var(--ok);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+      color: #1b1b2f;
+      min-height: 100vh;
+      background: linear-gradient(rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.4)),
+        url("aurora.jpg") center/cover fixed, #9aa0b4;
+    }
+
+    header {
+      background: var(--bar);
+      color: #1b1b2f;
+      text-align: center;
+      font-size: 1.4rem;
+      font-weight: 700;
+      padding: 16px;
+    }
+
+    main {
+      max-width: 480px;
+      margin: 0 auto;
+      padding: 24px 16px 40px;
+      text-align: center;
+    }
+
+    #total {
+      font-size: 6rem;
+      font-weight: 300;
+      line-height: 1.1;
+      color: #ffffff;
+      text-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
+    }
+
+    .titulo {
+      font-size: 2rem;
+      font-weight: 700;
+      color: #ffffff;
+      text-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
+    }
+
+    .info {
+      margin-top: 6px;
+      font-size: 0.95rem;
+      color: #ffffff;
+      text-shadow: 0 1px 4px rgba(0, 0, 0, 0.5);
+    }
+
+    #aviso {
+      min-height: 1.5em;
+      margin-top: 8px;
+      font-weight: 700;
+      color: var(--estado);
+    }
+
+    .fila {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      background: rgba(255, 255, 255, 0.75);
+      border-radius: 10px;
+      padding: 10px 14px;
+      margin-top: 12px;
+    }
+
+    .fila svg {
+      width: 34px;
+      height: 34px;
+      flex: none;
+    }
+
+    .fila .nombre {
+      flex: 1;
+      text-align: left;
+      font-weight: 600;
+    }
+
+    .fila .n {
+      min-width: 2ch;
+      font-size: 1.6rem;
+      font-weight: 700;
+    }
+
+    button {
+      font: inherit;
+      color: #fff;
+      background: var(--rosa);
+      border: 0;
+      border-radius: 8px;
+      padding: 10px 16px;
+      font-weight: 700;
+      cursor: pointer;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+    }
+
+    button:active:not(:disabled) {
+      transform: scale(0.95);
+    }
+
+    button:disabled {
+      opacity: 0.35;
+      cursor: not-allowed;
+      box-shadow: none;
+    }
+
+    button.gris {
+      background: #555;
+    }
+
+    .ajustes {
+      display: flex;
+      gap: 10px;
+      justify-content: center;
+      flex-wrap: wrap;
+      margin-top: 18px;
+    }
+
+    .aforo {
+      margin-top: 18px;
+      font-size: 0.95rem;
+      color: #ffffff;
+      text-shadow: 0 1px 4px rgba(0, 0, 0, 0.5);
+    }
+
+    .aforo input {
+      width: 80px;
+      padding: 7px;
+      border: 1px solid #888;
+      border-radius: 6px;
+      font: inherit;
+      text-align: center;
+    }
+
+    #toast {
+      position: fixed;
+      left: 50%;
+      bottom: 28px;
+      transform: translate(-50%, 30px);
+      max-width: calc(100% - 32px);
+      background: var(--full);
+      color: #fff;
+      font-weight: 600;
+      padding: 12px 20px;
+      border-radius: 8px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.25s, transform 0.25s;
+      z-index: 10;
+    }
+
+    #toast.ver {
+      opacity: 1;
+      transform: translate(-50%, 0);
+    }
+
+    dialog {
+      margin: auto;
+      border: 0;
+      border-radius: 10px;
+      padding: 20px;
+      max-width: 320px;
+      text-align: center;
+    }
+
+    dialog::backdrop {
+      background: rgba(0, 0, 0, 0.5);
+    }
+
+    dialog p {
+      margin: 8px 0 14px;
+    }
+
+    dialog div {
+      display: flex;
+      gap: 8px;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+
+    @media (max-width: 360px) {
+      #total {
+        font-size: 4.5rem;
+      }
+
+      .titulo {
+        font-size: 1.6rem;
+      }
+
+      button {
+        padding: 9px 12px;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <header>Contador de Personas</header>
+
+  <main>
+    <div id="total">0</div>
+    <div class="titulo">Personas</div>
+    <div class="info" id="info"></div>
+    <div id="aviso" role="alert"></div>
+
+    <div class="fila">
+      <svg viewBox="0 0 24 24" fill="#1e6bd6">
+        <circle cx="12" cy="5" r="3" />
+        <path d="M8 10h8a1 1 0 0 1 1 1v6h-2v5h-2v-5h-2v5H9v-5H7v-6a1 1 0 0 1 1-1z" />
+      </svg>
+      <span class="nombre">Hombres</span>
+      <button id="hMenos" aria-label="Restar hombre">-1</button>
+      <span class="n" id="h">0</span>
+      <button id="hMas" aria-label="Sumar hombre">+1</button>
+    </div>
+
+    <div class="fila">
+      <svg viewBox="0 0 24 24" fill="#d6247f">
+        <circle cx="12" cy="5" r="3" />
+        <path d="M12 9c-1.500 0-2.500.7-3 2l-2.500 7H9v4h2v-4h2v4h2v-4h2.500L15 11c-.5-1.300-1.500-2-3-2z" />
+      </svg>
+      <span class="nombre">Mujeres</span>
+      <button id="mMenos" aria-label="Restar mujer">-1</button>
+      <span class="n" id="m">0</span>
+      <button id="mMas" aria-label="Sumar mujer">+1</button>
+    </div>
+
+    <div class="ajustes">
+      <button id="restar" class="gris">-1 total</button>
+      <button id="reset" class="gris">Reiniciar</button>
+    </div>
+
+    <div class="aforo">
+      <label for="cap">Aforo máximo:</label>
+      <input id="cap" type="number" min="1" inputmode="numeric">
+    </div>
+  </main>
+
+  <div id="toast" role="alert"></div>
+
+  <dialog id="modal">
+    <strong>¿Qué quieres reiniciar?</strong>
+    <p>Selecciona el contador que volverá a 0.</p>
+    <div>
+      <button id="resetH">Hombres</button>
+      <button id="resetM">Mujeres</button>
+      <button class="gris" id="no">Cancelar</button>
+    </div>
+  </dialog>
+
+  <script>
+    (() => {
+      const KEY = 'aforo-simple';
+      const $ = id => document.getElementById(id);
+      let s = { h: 0, m: 0, cap: 100, ultimo: 'h' };
+
+      try {
+        Object.assign(s, JSON.parse(localStorage.getItem(KEY)) || {});
+      } catch (e) {}
+
+      const total = () => s.h + s.m;
+
+      let temporizador;
+      function error(texto) {
+        const t = $('toast');
+        t.textContent = texto;
+        t.classList.add('ver');
+        clearTimeout(temporizador);
+        temporizador = setTimeout(() => t.classList.remove('ver'), 2500);
+      }
+
+      function sumar(g) {
+        if (total() >= s.cap) return error(`Aforo máximo alcanzado (${s.cap} personas)`);
+        s[g]++;
+        s.ultimo = g;
+        pintar();
+      }
+
+      function restar(g) {
+        if (s[g] <= 0) return error('No puedes bajar de 0');
+        s[g]--;
+        s.ultimo = g;
+        pintar();
+      }
+
+      function restarTotal() {
+        if (total() <= 0) return error('No puedes bajar de 0');
+        let g = s.h === s.m ? s.ultimo : (s.h > s.m ? 'h' : 'm');
+        if (s[g] <= 0) g = g === 'h' ? 'm' : 'h';
+        restar(g);
+      }
+
+      function pintar() {
+        const t = total();
+        const pct = Math.min(100, Math.round(t / s.cap * 100));
+        const lleno = t >= s.cap;
+        const aviso = !lleno && pct >= 85;
+
+        $('total').textContent = t;
+        $('h').textContent = s.h;
+        $('m').textContent = s.m;
+        $('cap').value = s.cap;
+        $('info').textContent = `${pct}% ocupado · ${Math.max(0, s.cap - t)} plazas libres`;
+
+        document.documentElement.style.setProperty(
+          '--estado',
+          lleno ? 'var(--full)' : aviso ? 'var(--warn)' : 'var(--ok)'
+        );
+        $('aviso').textContent = lleno ? 'AFORO COMPLETO' : aviso ? 'Aforo casi completo' : '';
+
+        try {
+          localStorage.setItem(KEY, JSON.stringify(s));
+        } catch (e) {}
+      }
+
+      $('hMas').onclick = () => sumar('h');
+      $('mMas').onclick = () => sumar('m');$('hMenos').onclick = () => restar('h');
+      $('mMenos').onclick = () => restar('m');$('restar').onclick = restarTotal;
+      $('cap').onchange = e => {
+        s.cap = Math.max(1, parseInt(e.target.value) || s.cap);
+        pintar();
+      };
+      $('reset').onclick = () => $('modal').showModal();$('no').onclick = () => $('modal').close();$('resetH').onclick = () => {
+        s.h = 0;
+        $('modal').close();
+        pintar();
+      };
+      $('resetM').onclick = () => {
+        s.m = 0;
+        $('modal').close();
+        pintar();
+      };
+
+      pintar();
+    })();
+  </script>
+</body>
+</html>
